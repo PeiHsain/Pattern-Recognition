@@ -41,14 +41,10 @@ if __name__ == '__main__':
     # Load data
     train_df = pd.read_csv("./train_data.csv")
     x_train, y_train = train_df['x_train'], train_df['y_train']
-    # Plot data distribution
-    # plt.plot(x_train, y_train, '.')
-    # plt.show()
 
     # Train model
     # 1. Random initialize the weights, intercepts of the linear model
     DataSize = y_train.size
-    # print("size :", DataSize)
     meanY = sum(y_train) / DataSize
     LearnRate = 0.1
     iteration = 100
@@ -60,7 +56,6 @@ if __name__ == '__main__':
     Var = sum(x_train**2) / DataSize
     A = np.random.normal(0, Var)
     B = np.random.normal(0, Var)
-    # print("initial a :", A, ", initial b :", B)
 
     for i in range(iteration):
         # 2. Feed foward the training data into the model, get the output prediction
@@ -77,11 +72,9 @@ if __name__ == '__main__':
         # 5. Updating the weights and intercepts by the gradients * learning rate
         A = A - grad_a * LearnRate
         B = B - grad_b * LearnRate
-        # End of training
-        # print("count :", count)
+        # End of training. When loss is same as past for converge_limit time, stop the training
         if count > converge_limit:
             break
-        # print("a :", A, ", b :", B)
     
     # Test the performance on the testing data
     # Inference the test data (x_test) by your model and calculate the MSE of (y_test, y_pred)
