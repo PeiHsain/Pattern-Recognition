@@ -164,14 +164,14 @@ if __name__ == "__main__":
         proj /= (w[0]**2 + w[1]**2)
         proj = proj * w
         # class1
-        if y_pred[i] == 0:
+        if y_test[i] == 0:
             class1_x.append(x_test[i][0])
             class1_y.append(x_test[i][1])
             # project testing data
             proj1_x.append(proj[0] + x_line[0])
             proj1_y.append(proj[1] + y_line[0])
         # class2    
-        elif y_pred[i] == 1:
+        elif y_test[i] == 1:
             class2_x.append(x_test[i][0])
             class2_y.append(x_test[i][1])
             # project testing data
@@ -179,6 +179,7 @@ if __name__ == "__main__":
             proj2_y.append(proj[1] + y_line[0])
 
     # Visualization
+    plt.figure(figsize=(6, 6))
     plt.title(f"Projection line: w={slope}, b={intercept}")
     plt.plot(x_line, y_line)
     plt.scatter(class1_x, class1_y, color='blue')
