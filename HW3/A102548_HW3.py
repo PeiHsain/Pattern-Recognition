@@ -19,6 +19,8 @@
 # In[2]:
 
 
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 file_url = "http://storage.googleapis.com/download.tensorflow.org/data/heart.csv"
@@ -33,6 +35,7 @@ test_df = df.iloc[test_idx]
 # one-hot encoding
 train_num = len(train_df.index)
 test_num = len(test_df.index)
+feature_num = train_df.shape[1] - 1 # except the target
 # for feature 'thal' -> normal, fixed, reversable
 train_tmp = train_df[['target']]
 test_tmp = test_df[['target']]
@@ -227,10 +230,11 @@ class DecisionTree():
         self.Criterion = criterion
         self.Max_depth = max_depth
         self.Tree = None
+        self.Import = np.zeros(feature_num)
         return None
 
-    def SplitPurity(self, dataset):
-        'Calculate the purity for the split.\nOutput : value of purity'
+    def SplitImpurity(self, dataset):
+        'Calculate the impurity for the split.\nOutput : value of impurity'
         if self.Criterion == 'gini':
             value = gini(dataset)
         elif self.Criterion == 'entropy':
@@ -252,8 +256,8 @@ class DecisionTree():
             # Continuous
             if node.DataSet.columns[i] == 'age' or node.DataSet.columns[i] == 'trestbps' or node.DataSet.columns[i] == 'chol' or node.DataSet.columns[i] == 'thalach' or node.DataSet.columns[i] == 'oldpeak':
                 for k in range(N-1):
-                    tmp_left_split = self.SplitPurity(tmp_data.loc[tmp_data.index[0:k+1], ['target']])
-                    tmp_right_split = self.SplitPurity(tmp_data.loc[tmp_data.index[k+1:N], ['target']])
+                    tmp_left_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[0:k+1], ['target']])
+                    tmp_right_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[k+1:N], ['target']])
                     after_gain = ((k+1) * float(tmp_left_split) + (N-k-1) * float(tmp_right_split)) / N
                     information_gain = node.Gain - after_gain
                     # find the value of feature can yield lowest value of gini or entropy
@@ -264,8 +268,8 @@ class DecisionTree():
             else:
                 # Discrete
                 k = len(tmp_data[tmp_data[node.DataSet.columns[i]] < 1])
-                tmp_left_split = self.SplitPurity(tmp_data.loc[tmp_data.index[0:k], ['target']]) # data = 0
-                tmp_right_split = self.SplitPurity(tmp_data.loc[tmp_data.index[k:N], ['target']]) # data = 1
+                tmp_left_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[0:k], ['target']]) # data = 0
+                tmp_right_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[k:N], ['target']]) # data = 1
                 after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
                 information_gain = node.Gain - after_gain
                 # find the value of feature can yield lowest value of gini or entropy
@@ -299,9 +303,7 @@ class DecisionTree():
     def GenerateTree(self, node):
         'Generate the decision tree by recursive method.'
         # Initial gain
-        node.Gain = self.SplitPurity(node.DataSet['target'])
-        # print(node.Gain)
-        # print("len ", node.DataSet.shape[0])
+        node.Gain = self.SplitImpurity(node.DataSet['target'])
         # Stopping criteria
         # The data in each leaf-node belongs to the same class
         # Depth of the tree is equal to some pre-specified limit
@@ -314,18 +316,11 @@ class DecisionTree():
         # b. loop all values of all features
         A, G, T = self.SplitAttribute(node)
         node.Update_A_G_T(A, G, T)
-        # Cannot split by the feature
-        # if node.Gain == 0:
-        #     node.Set_Leaf(True)
-        #     return node 
-        # print(node.Attribute)
         # c. Split the node using the feature value found in step b.
         right_node, left_node = self.SplitNode(node)
         # d. Go to next node and repeat step a to c.
-        # print("L")
         node.Set_Left(left_node)
         self.GenerateTree(node.Left)
-        # print("R")
         node.Set_Right(right_node)
         self.GenerateTree(node.Right)
 
@@ -349,19 +344,9 @@ class DecisionTree():
         else:
             return 1
 
-    def Accuracy(self, test, test_predict):
-        'Compute and show the accuracy score.'
-        accur = 0
-        for i in range(test_num):
-            if test.at[test.index[i], 'target'] == test_predict[i]:
-                accur += 1
-        accur /= test_num
-        print(f"Accuracy score = {accur}")
-
-
     def Testing(self, test):
         'Put the testing data into decision tree to predicte.'
-        test_pred = np.zeros((test_num))
+        y_pred = np.zeros((test_num))
         # Prediction
         for i in range(test_num):
             tmp_node = self.Tree
@@ -373,9 +358,56 @@ class DecisionTree():
                 else:
                     tmp_node = tmp_node.Right   # go to right node
             # majority vote
-            test_pred[i] = self.Vote(tmp_node)
+            y_pred[i] = self.Vote(tmp_node)
         # Show the accuracy
-        self.Accuracy(test, test_pred)
+        y_test = test_df['target']
+        print('Test-set accuarcy score: ', accuracy_score(y_test, y_pred))
+
+    def Importance(self, node):
+        'Get the feature importanceget by counting the feature used for splitting data.'
+        if node.Leaf == True:
+            return
+        # count the feature
+        if node.Attribute == 'age':
+            self.Import[0] += 1
+        elif node.Attribute == 'sex':
+            self.Import[1] += 1
+        elif node.Attribute == 'cp_1' or node.Attribute == 'cp_2' or node.Attribute == 'cp_3' or node.Attribute == 'cp_4':
+            self.Import[2] += 1
+        elif node.Attribute == 'trestbps':
+            self.Import[3] += 1
+        elif node.Attribute == 'chol':
+            self.Import[4] += 1
+        elif node.Attribute == 'fbs':
+            self.Import[5] += 1
+        elif node.Attribute == 'restecg_0' or node.Attribute == 'restecg_1' or node.Attribute == 'restecg_2':
+            self.Import[6] += 1
+        elif node.Attribute == 'thalach':
+            self.Import[7] += 1
+        elif node.Attribute == 'exang':
+            self.Import[8] += 1
+        elif node.Attribute == 'oldpeak':
+            self.Import[9] += 1
+        elif node.Attribute == 'slope_1' or node.Attribute == 'slope_2' or node.Attribute == 'slope_3':
+            self.Import[10] += 1
+        elif node.Attribute == 'ca_0' or node.Attribute == 'ca_1' or node.Attribute == 'ca_2'or node.Attribute == 'ca_3':
+            self.Import[11] += 1
+        elif node.Attribute == 'thal_normal' or node.Attribute == 'thal_fixed' or node.Attribute == 'thal_reversable':
+            self.Import[12] += 1
+        # Go to left and right child
+        self.Importance(node.Left)
+        self.Importance(node.Right)
+
+
+    def PlotImportance(self):
+        'Plot the feature importance.'
+        self.Importance(self.Tree)
+        feature_tag = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
+        plt.title(f"Feature Importance")
+        plt.xlabel(f"Count")
+        plt.ylabel(f"Feature")
+        plt.barh(feature_tag, self.Import)
+        plt.show()
         
 
 # ### Question 2.1
@@ -422,12 +454,14 @@ print("--------------------------------------")
 # - Hint: You can use the recursive method to build the nodes
 # 
 
+# In[16]:
+
 # ## Question 3
 # Plot the [feature importance] of your Decision Tree model. You can get the feature importance by counting the feature used for splitting data.
 # 
 # - You can simply plot the **counts of feature used** for building tree without normalize the importance. Take the figure below as example, outlook feature has been used for splitting for almost 50 times. Therefore, it has the largest importance
-# 
-# ![image]
+clf_depth10.PlotImportance()
+
 
 # ## Question 4
 # implement the AdaBooest algorithm by using the CART you just implemented from question 2 as base learner. You should implement one arguments for the AdaBooest.
@@ -441,18 +475,23 @@ class AdaBoost():
         return None
 
 
-# In[ ]:
-
-
-
-
 
 # ### Question 4.1
 # Show the accuracy score of test data by `n_estimators=10` and `n_estimators=100`, respectively.
 # 
 
 # In[ ]:
-
+print("Q 4:")
+clf_10estimator = AdaBoost(n_estimators=10)
+clf_100estimator = AdaBoost(n_estimators=100)
+# print("N_estimator = 10:")
+# clf_gini.Create(train_encoding)
+# clf_gini.Testing(test_encoding)
+# print("--------------------------------------")
+# print("N_estimator = 100:")
+# clf_entropy.Create(train_encoding)
+# clf_entropy.Testing(test_encoding)
+# print("--------------------------------------")
 
 
 
@@ -480,9 +519,17 @@ class RandomForest():
 # In[12]:
 
 
-clf_10tree = RandomForest(n_estimators=10, max_features=np.sqrt(x_train.shape[1]))
-clf_100tree = RandomForest(n_estimators=100, max_features=np.sqrt(x_train.shape[1]))
-
+print("Q 5.1:")
+clf_10tree = RandomForest(n_estimators=10, max_features=np.sqrt(feature_num))
+clf_100tree = RandomForest(n_estimators=100, max_features=np.sqrt(feature_num))
+# print("N_estimator = 10:")
+# clf_gini.Create(train_encoding)
+# clf_gini.Testing(test_encoding)
+# print("--------------------------------------")
+# print("N_estimator = 100:")
+# clf_entropy.Create(train_encoding)
+# clf_entropy.Testing(test_encoding)
+# print("--------------------------------------")
 
 # In[ ]:
 
@@ -497,9 +544,17 @@ clf_100tree = RandomForest(n_estimators=100, max_features=np.sqrt(x_train.shape[
 # In[13]:
 
 
-clf_random_features = RandomForest(n_estimators=10, max_features=np.sqrt(x_train.shape[1]))
-clf_all_features = RandomForest(n_estimators=10, max_features=x_train.shape[1])
-
+print("Q 5.2:")
+clf_random_features = RandomForest(n_estimators=10, max_features=np.sqrt(feature_num))
+clf_all_features = RandomForest(n_estimators=10, max_features=feature_num)
+# print("Random features:")
+# clf_gini.Create(train_encoding)
+# clf_gini.Testing(test_encoding)
+# print("--------------------------------------")
+# print("All features:")
+# clf_entropy.Create(train_encoding)
+# clf_entropy.Testing(test_encoding)
+# print("--------------------------------------")
 
 # - Note: Use majority votes to get the final prediction, you may get slightly different results when re-building the random forest model
 
@@ -515,31 +570,7 @@ clf_all_features = RandomForest(n_estimators=10, max_features=x_train.shape[1])
 # - Hyperparameter tuning
 # - Implement any other ensemble methods, such as gradient boosting. Please note that you cannot call any package. Also, only ensemble method can be used. Neural network method is not allowed to used.
 
-# In[ ]:
-
-
-from sklearn.metrics import accuracy_score
-
-
-# In[4]:
-
-
-y_test = test_df['target']
-
-
-# In[ ]:
-
-
-y_pred = your_model.predict(x_test)
-
-
-# In[ ]:
-
-
-print('Test-set accuarcy score: ', accuracy_score(y_test, y_pred))
 
 
 # ## Supplementary
 # If you have trouble to implement this homework, TA strongly recommend watching [this video](https://www.youtube.com/watch?v=LDRbO9a6XPU), which explains Decision Tree model clearly. But don't copy code from any resources, try to finish this homework by yourself! 
-
-# In[ ]:
