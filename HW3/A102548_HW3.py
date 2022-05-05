@@ -32,6 +32,8 @@ test_idx = np.load('test_idx.npy')
 train_df = df.iloc[train_idx]
 test_df = df.iloc[test_idx]
 
+y_test = test_df['target']
+
 # one-hot encoding
 train_num = len(train_df.index)
 test_num = len(test_df.index)
@@ -166,6 +168,20 @@ def entropy(sequence):
             return -(p1*np.log2(p1)) - (p2*np.log2(p2))    
 
 
+def SplitImpurity(mode, dataset):
+    'Calculate the impurity for the split.\nOutput : value of impurity'
+    if mode == 'gini':
+        value = gini(dataset)
+    elif mode == 'entropy':
+        value = entropy(dataset)
+    return value
+
+
+def Acuracy(y_label, y_pred):
+    'Show the accuracy of prediction.'
+    print('Test-set accuarcy score: ', accuracy_score(y_label, y_pred))
+
+
 # In[14]:
 
 
@@ -233,14 +249,6 @@ class DecisionTree():
         self.Import = np.zeros(feature_num)
         return None
 
-    def SplitImpurity(self, dataset):
-        'Calculate the impurity for the split.\nOutput : value of impurity'
-        if self.Criterion == 'gini':
-            value = gini(dataset)
-        elif self.Criterion == 'entropy':
-            value = entropy(dataset)
-        return value
-
     def SplitAttribute(self, node):
         'Select the best attribute to split data.\nOutput : best attribute index'
         max_gain = 0
@@ -255,21 +263,26 @@ class DecisionTree():
             # split by threshold of average(i-th, (i+1)-th)
             # Continuous
             if node.DataSet.columns[i] == 'age' or node.DataSet.columns[i] == 'trestbps' or node.DataSet.columns[i] == 'chol' or node.DataSet.columns[i] == 'thalach' or node.DataSet.columns[i] == 'oldpeak':
-                for k in range(N-1):
-                    tmp_left_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[0:k+1], ['target']])
-                    tmp_right_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[k+1:N], ['target']])
-                    after_gain = ((k+1) * float(tmp_left_split) + (N-k-1) * float(tmp_right_split)) / N
+                for k in range(N+1):
+                    tmp_left_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[0:k], ['target']])
+                    tmp_right_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[k:N], ['target']])
+                    after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
                     information_gain = node.Gain - after_gain
                     # find the value of feature can yield lowest value of gini or entropy
                     if information_gain > max_gain:
                         max_gain = information_gain
                         bestfeature = node.DataSet.columns[i]
-                        best_threshold = (tmp_data.at[tmp_data.index[k], bestfeature] + tmp_data.at[tmp_data.index[k+1], bestfeature]) / 2
+                        if k == 0:  # all data split in right
+                            best_threshold = -1
+                        elif k >= N:  # all data split in left
+                            best_threshold = tmp_data.at[tmp_data.index[N-1], bestfeature]
+                        else:
+                            best_threshold = (tmp_data.at[tmp_data.index[k-1], bestfeature] + tmp_data.at[tmp_data.index[k], bestfeature]) / 2
             else:
                 # Discrete
                 k = len(tmp_data[tmp_data[node.DataSet.columns[i]] < 1])
-                tmp_left_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[0:k], ['target']]) # data = 0
-                tmp_right_split = self.SplitImpurity(tmp_data.loc[tmp_data.index[k:N], ['target']]) # data = 1
+                tmp_left_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[0:k], ['target']]) # data = 0
+                tmp_right_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[k:N], ['target']]) # data = 1
                 after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
                 information_gain = node.Gain - after_gain
                 # find the value of feature can yield lowest value of gini or entropy
@@ -303,7 +316,7 @@ class DecisionTree():
     def GenerateTree(self, node):
         'Generate the decision tree by recursive method.'
         # Initial gain
-        node.Gain = self.SplitImpurity(node.DataSet['target'])
+        node.Gain = SplitImpurity(self.Criterion, node.DataSet['target'])
         # Stopping criteria
         # The data in each leaf-node belongs to the same class
         # Depth of the tree is equal to some pre-specified limit
@@ -359,9 +372,7 @@ class DecisionTree():
                     tmp_node = tmp_node.Right   # go to right node
             # majority vote
             y_pred[i] = self.Vote(tmp_node)
-        # Show the accuracy
-        y_test = test_df['target']
-        print('Test-set accuarcy score: ', accuracy_score(y_test, y_pred))
+        return y_pred
 
     def Importance(self, node):
         'Get the feature importanceget by counting the feature used for splitting data.'
@@ -422,11 +433,13 @@ clf_depth3 = DecisionTree(criterion='gini', max_depth=3)
 clf_depth10 = DecisionTree(criterion='gini', max_depth=10)
 print("Max_depth = 3:")
 clf_depth3.Create(train_encoding)
-clf_depth3.Testing(test_encoding)
+pred_depth3 = clf_depth3.Testing(test_encoding)
+Acuracy(y_test, pred_depth3)
 print("--------------------------------------")
 print("Max_depth = 10:")
 clf_depth10.Create(train_encoding)
-clf_depth10.Testing(test_encoding)
+pred_depth10 = clf_depth10.Testing(test_encoding)
+Acuracy(y_test, pred_depth10)
 print("--------------------------------------")
 
 # ### Question 2.2
@@ -441,11 +454,13 @@ clf_gini = DecisionTree(criterion='gini', max_depth=3)
 clf_entropy = DecisionTree(criterion='entropy', max_depth=3)
 print("Criterion = gini:")
 clf_gini.Create(train_encoding)
-clf_gini.Testing(test_encoding)
+pred_gini = clf_gini.Testing(test_encoding)
+Acuracy(y_test, pred_gini)
 print("--------------------------------------")
 print("Criterion = entropy:")
 clf_entropy.Create(train_encoding)
-clf_entropy.Testing(test_encoding)
+pred_entropy = clf_entropy.Testing(test_encoding)
+Acuracy(y_test, pred_entropy)
 print("--------------------------------------")
 
 
@@ -472,9 +487,104 @@ clf_depth10.PlotImportance()
 
 class AdaBoost():
     def __init__(self, n_estimators):
+        self.D = 0
+        self.h_f = np.zeros(n_estimators)   # to keep weak learner feature
+        self.h_t = np.zeros(n_estimators)   # to keep weak learner threshold
+        self.a = np.zeros(n_estimators)   # to keep weak learner weight
+        self.limitEstimator = n_estimators
         return None
 
+    def WeakLearner(self, train_data):
+        'Generate weak learner use CRAT and choose the min error one.\nOutput : weak learner, min error and its prediction'
+        error = float('inf')
+        # Build CRAT(1 depth tree) for every feature to compute error
+        for i in range(train_data.shape[1]-1):  # remove the 'target'
+            # Initial
+            N = train_data.shape[0]
+            x_pred = np.zeros(N)
+            feature = train_data.columns[i]
+            tmp_data = train_data.sort_values(by=[feature], ascending=True)
+            # Continuous
+            if feature == 'age' or feature == 'trestbps' or feature == 'chol' or feature == 'thalach' or feature == 'oldpeak':
+                init_gain = SplitImpurity('gini', train_data['target'])
+                max_gain = 0
+                for k in range(N+1):
+                    tmp_left_split = SplitImpurity('gini', tmp_data.loc[tmp_data.index[0:k], ['target']])
+                    tmp_right_split = SplitImpurity('gini', tmp_data.loc[tmp_data.index[k:N], ['target']])
+                    after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
+                    information_gain = init_gain - after_gain
+                    # find the value of feature can yield lowest value of gini or entropy
+                    if information_gain > max_gain:
+                        max_gain = information_gain
+                        if k == 0:  # all data split in right
+                            threshold = -1
+                        elif k >= N:  # all data split in left
+                            threshold = tmp_data.at[tmp_data.index[N-1], feature]
+                        else:
+                            threshold = (tmp_data.at[tmp_data.index[k-1], feature] + tmp_data.at[tmp_data.index[k], feature]) / 2
+            else:
+                # Discrete
+                threshold = 0.5
+            # Prediction and compute the error for weak learner
+            e = 0
+            for k in range(N):
+                # prediction
+                if train_data.at[train_data.index[i], feature] <= threshold:
+                    x_pred[i] = 0
+                else:
+                    x_pred[i] = 1
+                # count error
+                if train_data.at[train_data.index[i], 'target'] == x_pred[i]:
+                    e += self.D[i]
+            # find the weak learner has min error
+            if e < error:
+                best_feature = feature
+                best_threshold = threshold
+                error = e
+                prediction = x_pred     
+        return best_feature, best_threshold, error, prediction
 
+    def Training(self, train_data):
+        'Use Adaboost to train the model.'
+        # Initial
+        N = train_data.shape[0]
+        self.D = np.array((N), 1/N)
+        train_label = train_data['target']  #value = 0 or 1
+        y_label = np.ones(N)    # value = -1 or 1
+
+        # Untill meet the limited estimator
+        for k in range(self.limitEstimator):
+            # find classifier h and compute error e
+            self.h_f[k], self.h_t[k], e, train_pred = self.WeakLearner(train_data)  # value = 0 or 1
+            y_pred = np.ones(N)    # value = -1 or 1
+            # change values to -1 or 1
+            for i in range(N):
+                if train_pred[i] == 0:
+                    y_pred[i] = -1
+                if train_label[i] == 0:
+                    y_label[i] = -1
+            # compute weight classifier a = (1/2)*ln((1-e)/e)
+            self.a[k] = np.log((1-e)/e) / 2
+            # update distribution D = D*exp(-a*y*h(x)) / Z
+            self.D = (self.D * np.exp((-self.a[k])*y_label*y_pred))
+            self.D /= np.sum(self.D)
+
+    def Prediction(self, test_data):
+        'Use model to predicte the testing data.\nOutput : the prediction'
+        pred = np.zeros((test_num))
+        for k in range(test_num):
+            for i in range(self.limitEstimator):
+                if test_data.at[test_data.index[k], self.h_f[i]] <= self.h_t[i]:
+                    h = -1
+                else:
+                    h = 1
+                pred[k] += self.a[i] * h
+            if pred[k] == -1:
+                pred[k] = 0
+            else:
+                pred[k] = 1
+        return pred
+  
 
 # ### Question 4.1
 # Show the accuracy score of test data by `n_estimators=10` and `n_estimators=100`, respectively.
@@ -484,14 +594,16 @@ class AdaBoost():
 print("Q 4:")
 clf_10estimator = AdaBoost(n_estimators=10)
 clf_100estimator = AdaBoost(n_estimators=100)
-# print("N_estimator = 10:")
-# clf_gini.Create(train_encoding)
-# clf_gini.Testing(test_encoding)
-# print("--------------------------------------")
-# print("N_estimator = 100:")
-# clf_entropy.Create(train_encoding)
-# clf_entropy.Testing(test_encoding)
-# print("--------------------------------------")
+print("N_estimator = 10:")
+clf_10estimator.Training(train_encoding)
+pred_10estimator = clf_10estimator.Prediction(test_encoding)
+Acuracy(y_test, pred_10estimator)
+print("--------------------------------------")
+print("N_estimator = 100:")
+clf_100estimator.Training(train_encoding)
+pred_100estimator = clf_100estimator.Prediction(test_encoding)
+Acuracy(y_test, pred_100estimator)
+print("--------------------------------------")
 
 
 
