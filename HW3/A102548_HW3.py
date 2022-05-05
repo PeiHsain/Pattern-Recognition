@@ -488,7 +488,7 @@ clf_depth10.PlotImportance()
 class AdaBoost():
     def __init__(self, n_estimators):
         self.D = 0
-        self.h_f = np.zeros(n_estimators)   # to keep weak learner feature
+        self.h_f = []   # to keep weak learner feature
         self.h_t = np.zeros(n_estimators)   # to keep weak learner threshold
         self.a = np.zeros(n_estimators)   # to keep weak learner weight
         self.limitEstimator = n_estimators
@@ -548,20 +548,21 @@ class AdaBoost():
         'Use Adaboost to train the model.'
         # Initial
         N = train_data.shape[0]
-        self.D = np.array((N), 1/N)
+        self.D = np.full((N), 1/N)
         train_label = train_data['target']  #value = 0 or 1
         y_label = np.ones(N)    # value = -1 or 1
 
         # Untill meet the limited estimator
         for k in range(self.limitEstimator):
             # find classifier h and compute error e
-            self.h_f[k], self.h_t[k], e, train_pred = self.WeakLearner(train_data)  # value = 0 or 1
+            feature, self.h_t[k], e, train_pred = self.WeakLearner(train_data)  # value = 0 or 1
+            self.h_f.append(feature)
             y_pred = np.ones(N)    # value = -1 or 1
             # change values to -1 or 1
             for i in range(N):
                 if train_pred[i] == 0:
                     y_pred[i] = -1
-                if train_label[i] == 0:
+                if train_label.loc[train_label.index[i]] == 0:
                     y_label[i] = -1
             # compute weight classifier a = (1/2)*ln((1-e)/e)
             self.a[k] = np.log((1-e)/e) / 2
