@@ -643,13 +643,13 @@ class AdaBoost():
 
 # In[ ]:
 print("Q 4:")
-# clf_10estimator = AdaBoost(n_estimators=10)
+clf_10estimator = AdaBoost(n_estimators=10)
 clf_100estimator = AdaBoost(n_estimators=100)
-# print("N_estimator = 10:")
-# clf_10estimator.Training(train_encoding)
-# pred_10estimator = clf_10estimator.Prediction(test_encoding)
-# Acuracy(y_test, pred_10estimator)
-# print("--------------------------------------")
+print("N_estimator = 10:")
+clf_10estimator.Training(train_encoding)
+pred_10estimator = clf_10estimator.Prediction(test_encoding)
+Acuracy(y_test, pred_10estimator)
+print("--------------------------------------")
 print("N_estimator = 100:")
 clf_100estimator.Training(train_encoding)
 pred_100estimator = clf_100estimator.Prediction(test_encoding)
@@ -672,18 +672,51 @@ print("--------------------------------------")
 
 class RandomForest():
     def __init__(self, n_estimators, max_features, boostrap=True, criterion='gini', max_depth=None):
-        self.Estimator = n_estimators   # The number of trees in the forest
+        self.Tree_num = n_estimators   # The number of trees in the forest
         self.Feature_num = max_features # The number of features to consider when looking for the best split
         self.Boostrap = boostrap    # Whether bootstrap samples are used when building trees
         self.Criterion = criterion  # The function to measure the quality of a split
         self.Depth = max_depth  # The maximum depth of the tree
+        self.Forest = []    # Keep trees to build the forest
         return None
 
-    def Bagging(self):
-        'Booststrap aggregating'
+    def Bagging(self, data):
+        'Booststrap aggregating. Re-sample from the data.\nOutput : a data set'
+        # Randomly choose sample from data to create a new dataset
+        dataset = pd.DataFrame()
+        N = data.shape[0]
+        for i in range(N):
+            index = np.random.randint(0, N)
+            dataset.append(data.loc[index])
+        return dataset
+
+    # def RandomVector(self):
+    #     'Randomly select n feature by using random-subspace.\nOutput : a feature set'
+    #     re
+
+    def GrowTree(self, node, feature):
+        'Grow a decision tree by recursively.\nOutput : a tree'
+        # Randomly select m attributes from the M attributes
+        # Pick the best attribute and its threshold as the split
+        # Split the node into two daughter nodes
 
     def Create(self, train_data):
-        'Creat a random forest.'
+        'Creat a random forest by decision trees.'
+        # For b = 1 to B
+        for i in range(self.Tree_num):
+            # Draw a bootstrap dataset Db of size N from dataset D
+            if self.Boostrap == True:
+                Db = self.Bagging(train_data)
+            else:
+                Db = train_data
+            # Randomly select m attributes from the M attributes
+            feature_set = np.random.sample(train_data.columns, self.Feature_num)
+            # Grow a decision tree Tb based on Db and random vector
+            Tb = TreeNode(Db)
+            self.GrowTree(Tb, feature_set)
+            # The esemble of tree Tb
+            self.Forest.append(Tb)
+        
     
     def Testing(self, test_data):
         'Use forest to predicte the testing data.\nOutput : the prediction'
