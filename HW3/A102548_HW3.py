@@ -47,80 +47,82 @@ train_encoding = train_encoding.drop('target', axis=1)
 test_encoding = test_encoding.drop('target', axis=1)
 train_encoding = pd.concat([train_encoding, train_tmp], axis=1)
 test_encoding = pd.concat([test_encoding, test_tmp], axis=1)
+train_encoding.index = pd.Series([i for i in range(train_num)])
+test_encoding.index = pd.Series([i for i in range(test_num)])
 
 # for feature 'cp' -> value 1-4
 for n in range(1, 5):
-    tmp = pd.DataFrame(data=train_encoding, columns=['cp'])
+    tmp1 = pd.DataFrame(data=train_encoding, columns=['cp'])
+    tmp2 = pd.DataFrame(data=test_encoding, columns=['cp'])
     for i in range(train_num):
-        if tmp.at[tmp.index[i], 'cp'] == n:
-            tmp.at[tmp.index[i], 'cp'] = 1
+        if tmp1.at[i, 'cp'] == n:
+            tmp1.at[i, 'cp'] = 1
         else:
-            tmp.at[tmp.index[i], 'cp'] = 0
-    train_encoding.insert(0, f'cp_{n}', tmp)
-    tmp = pd.DataFrame(data=test_encoding, columns=['cp'])
+            tmp1.at[i, 'cp'] = 0
     for i in range(test_num):
-        if tmp.at[tmp.index[i], 'cp'] == n:
-            tmp.at[tmp.index[i], 'cp'] = 1
+        if tmp2.at[i, 'cp'] == n:
+            tmp2.at[i, 'cp'] = 1
         else:
-            tmp.at[tmp.index[i], 'cp'] = 0
-    test_encoding.insert(0, f'cp_{n}', tmp)
+            tmp2.at[i, 'cp'] = 0
+    train_encoding.insert(0, f'cp_{n}', tmp1)
+    test_encoding.insert(0, f'cp_{n}', tmp2)
 train_encoding = train_encoding.drop('cp', axis=1)
 test_encoding = test_encoding.drop('cp', axis=1)
 
 # for feature 'restecg' -> value 0-2
 for n in range(3):
-    tmp = pd.DataFrame(data=train_encoding, columns=['restecg'])
+    tmp1 = pd.DataFrame(data=train_encoding, columns=['restecg'])
+    tmp2 = pd.DataFrame(data=test_encoding, columns=['restecg'])
     for i in range(train_num):
-        if tmp.at[tmp.index[i], 'restecg'] == n:
-            tmp.at[tmp.index[i], 'restecg'] = 1
+        if tmp1.at[i, 'restecg'] == n:
+            tmp1.at[i, 'restecg'] = 1
         else:
-            tmp.at[tmp.index[i], 'restecg'] = 0
-    train_encoding.insert(0, f'restecg_{n}', tmp)
-    tmp = pd.DataFrame(data=test_encoding, columns=['restecg'])
+            tmp1.at[i, 'restecg'] = 0
     for i in range(test_num):
-        if tmp.at[tmp.index[i], 'restecg'] == n:
-            tmp.at[tmp.index[i], 'restecg'] = 1
+        if tmp2.at[i, 'restecg'] == n:
+            tmp2.at[i, 'restecg'] = 1
         else:
-            tmp.at[tmp.index[i], 'restecg'] = 0
-    test_encoding.insert(0, f'restecg_{n}', tmp)
+            tmp2.at[i, 'restecg'] = 0
+    train_encoding.insert(0, f'restecg_{n}', tmp1)
+    test_encoding.insert(0, f'restecg_{n}', tmp2)
 train_encoding = train_encoding.drop('restecg', axis=1)
 test_encoding = test_encoding.drop('restecg', axis=1)
 
 # for feature 'slop' -> value 1-3
 for n in range(1, 4):
-    tmp = pd.DataFrame(data=train_encoding, columns=['slope'])
+    tmp1 = pd.DataFrame(data=train_encoding, columns=['slope'])
+    tmp2 = pd.DataFrame(data=test_encoding, columns=['slope'])
     for i in range(train_num):
-        if tmp.at[tmp.index[i], 'slope'] == n:
-            tmp.at[tmp.index[i], 'slope'] = 1
+        if tmp1.at[i, 'slope'] == n:
+            tmp1.at[i, 'slope'] = 1
         else:
-            tmp.at[tmp.index[i], 'slope'] = 0
-    train_encoding.insert(0, f'slope_{n}', tmp)
-    tmp = pd.DataFrame(data=test_encoding, columns=['slope'])
+            tmp1.at[i, 'slope'] = 0
     for i in range(test_num):
-        if tmp.at[tmp.index[i], 'slope'] == n:
-            tmp.at[tmp.index[i], 'slope'] = 1
+        if tmp2.at[i, 'slope'] == n:
+            tmp2.at[i, 'slope'] = 1
         else:
-            tmp.at[tmp.index[i], 'slope'] = 0
-    test_encoding.insert(0, f'slope_{n}', tmp)
+            tmp2.at[i, 'slope'] = 0
+    train_encoding.insert(0, f'slope_{n}', tmp1)
+    test_encoding.insert(0, f'slope_{n}', tmp2)
 train_encoding = train_encoding.drop('slope', axis=1)
 test_encoding = test_encoding.drop('slope', axis=1)
 
 # for feature 'ca' -> value 0-3
 for n in range(4):
-    tmp = pd.DataFrame(data=train_encoding, columns=['ca'])
+    tmp1 = pd.DataFrame(data=train_encoding, columns=['ca'])
+    tmp2 = pd.DataFrame(data=test_encoding, columns=['ca'])
     for i in range(train_num):
-        if tmp.at[tmp.index[i], 'ca'] == n:
-            tmp.at[tmp.index[i], 'ca'] = 1
+        if tmp1.at[i, 'ca'] == n:
+            tmp1.at[i, 'ca'] = 1
         else:
-            tmp.at[tmp.index[i], 'ca'] = 0
-    train_encoding.insert(0, f'ca_{n}', tmp)
-    tmp = pd.DataFrame(data=test_encoding, columns=['ca'])
+            tmp1.at[i, 'ca'] = 0
     for i in range(test_num):
-        if tmp.at[tmp.index[i], 'ca'] == n:
-            tmp.at[tmp.index[i], 'ca'] = 1
+        if tmp2.at[i, 'ca'] == n:
+            tmp2.at[i, 'ca'] = 1
         else:
-            tmp.at[tmp.index[i], 'ca'] = 0
-    test_encoding.insert(0, f'ca_{n}', tmp)
+            tmp2.at[i, 'ca'] = 0    
+    train_encoding.insert(0, f'ca_{n}', tmp1)
+    test_encoding.insert(0, f'ca_{n}', tmp2)
 train_encoding = train_encoding.drop('ca', axis=1)
 test_encoding = test_encoding.drop('ca', axis=1)
 
@@ -243,8 +245,8 @@ class TreeNode():
 
 class DecisionTree():
     def __init__(self, criterion='gini', max_depth=None):
-        self.Criterion = criterion
-        self.Max_depth = max_depth
+        self.Criterion = criterion  # The function to measure the quality of a split
+        self.Max_depth = max_depth  # The maximum depth of the tree
         self.Tree = None
         self.Import = np.zeros(feature_num)
         return None
@@ -266,14 +268,14 @@ class DecisionTree():
                 for k in range(N+1):
                     tmp_left_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[0:k], ['target']])
                     tmp_right_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[k:N], ['target']])
-                    after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
+                    after_gain = (k * tmp_left_split + (N-k) * tmp_right_split) / N
                     information_gain = node.Gain - after_gain
                     # find the value of feature can yield lowest value of gini or entropy
                     if information_gain > max_gain:
                         max_gain = information_gain
                         bestfeature = node.DataSet.columns[i]
                         if k == 0:  # all data split in right
-                            best_threshold = -1
+                            best_threshold = tmp_data.at[tmp_data.index[0], bestfeature]
                         elif k >= N:  # all data split in left
                             best_threshold = tmp_data.at[tmp_data.index[N-1], bestfeature]
                         else:
@@ -283,7 +285,7 @@ class DecisionTree():
                 k = len(tmp_data[tmp_data[node.DataSet.columns[i]] < 1])
                 tmp_left_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[0:k], ['target']]) # data = 0
                 tmp_right_split = SplitImpurity(self.Criterion, tmp_data.loc[tmp_data.index[k:N], ['target']]) # data = 1
-                after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
+                after_gain = (k * tmp_left_split + (N-k) * tmp_right_split) / N
                 information_gain = node.Gain - after_gain
                 # find the value of feature can yield lowest value of gini or entropy
                 if information_gain > max_gain:
@@ -363,7 +365,7 @@ class DecisionTree():
         # Prediction
         for i in range(test_num):
             tmp_node = self.Tree
-            x = test.loc[test.index[i]]
+            x = test.loc[i]
             # go down the decision tree untill reach the leaf
             while tmp_node.Leaf == False:
                 if x[tmp_node.Attribute] < tmp_node.Threshold:
@@ -491,33 +493,81 @@ class AdaBoost():
         self.h_f = []   # to keep weak learner feature
         self.h_t = np.zeros(n_estimators)   # to keep weak learner threshold
         self.a = np.zeros(n_estimators)   # to keep weak learner weight
-        self.limitEstimator = n_estimators
+        self.limitEstimator = n_estimators  # The number of trees in the forest
         return None
 
-    def WeakLearner(self, train_data):
+    def Impurity(self, data):
+        'Compute the Gini-index for two class. The smaller, the purer.\nOutput : Gini-index'
+        p1 = 0
+        p2 = 0
+        seq_len = len(data)
+        if seq_len <= 0:
+            return 0
+        else:
+            for i in range(seq_len):
+                if float(data.loc[data.index[i]]) == 0:
+                    p1 += self.D[data.index[i]]
+                else:
+                    p2 += self.D[data.index[i]]
+            # Gini = 1 - sum_all_class_k(Pk^2)
+            return 1 - (p1**2) - (p2**2)
+
+    def CountError(self, label, pred):
+        'Compute the error for weak learner.\nOutput : the error'
+        error = 0
+        for k in range(data.shape[0]):
+            if label[k] != pred[k]:
+                error += self.D[k]
+        return error
+            
+    def Classifier(self, data, feature, threshold, mode):
+        'Predicte by the threshold for value -1 or 1.\nOutput : the prediction'
+        pred = np.ones(data.shape[0])
+        for k in range(data.shape[0]):
+            if mode == 1:   # <=
+                if data.at[k, feature] <= threshold:
+                    pred[k] = -1
+            else:   # >
+                if data.at[k, feature] > threshold:
+                    pred[k] = -1
+        return pred
+
+    def WeakLearner(self, train_data, label):
         'Generate weak learner use CRAT and choose the min error one.\nOutput : weak learner, min error and its prediction'
         error = float('inf')
+        N = train_data.shape[0]
         # Build CRAT(1 depth tree) for every feature to compute error
         for i in range(train_data.shape[1]-1):  # remove the 'target'
             # Initial
-            N = train_data.shape[0]
-            x_pred = np.zeros(N)
+            # x_pred = np.zeros(N)
             feature = train_data.columns[i]
             tmp_data = train_data.sort_values(by=[feature], ascending=True)
             # Continuous
             if feature == 'age' or feature == 'trestbps' or feature == 'chol' or feature == 'thalach' or feature == 'oldpeak':
-                init_gain = SplitImpurity('gini', train_data['target'])
+                # continuous_e = float('inf')
+                
+                # for k in range(N-1):
+                #     tmp_threshold = (train_data.at[tmp_data.index[k], feature] + train_data.at[tmp_data.index[k+1], feature]) / 2
+                #     # Prediction and compute the error for weak learner
+                #     tmp_pred = self.Classifier(train_data, feature, tmp_threshold, mode)    # -1 or 1
+                #     tmp_e = self.CountError(label, tmp_pred)
+                #     if tmp_e < continuous_e:
+                #         continuous_e = tmp_e
+                #         threshold = tmp_threshold
+                #         tmp_pred = x_pred
+                init_gain = self.Impurity(train_data['target'])
                 max_gain = 0
                 for k in range(N+1):
-                    tmp_left_split = SplitImpurity('gini', tmp_data.loc[tmp_data.index[0:k], ['target']])
-                    tmp_right_split = SplitImpurity('gini', tmp_data.loc[tmp_data.index[k:N], ['target']])
-                    after_gain = (k * float(tmp_left_split) + (N-k) * float(tmp_right_split)) / N
+                    # tmp_threshold = train_data.at[train_data.index[k], feature]
+                    tmp_left_split = self.Impurity(tmp_data.loc[tmp_data.index[0:k], ['target']])
+                    tmp_right_split = self.Impurity(tmp_data.loc[tmp_data.index[k:N], ['target']])
+                    after_gain = np.sum(self.D[tmp_data.index[0:k]]) * tmp_left_split + np.sum(self.D[tmp_data.index[k:N]]) * tmp_right_split
                     information_gain = init_gain - after_gain
                     # find the value of feature can yield lowest value of gini or entropy
                     if information_gain > max_gain:
                         max_gain = information_gain
                         if k == 0:  # all data split in right
-                            threshold = -1
+                            threshold = tmp_data.at[tmp_data.index[0], feature]
                         elif k >= N:  # all data split in left
                             threshold = tmp_data.at[tmp_data.index[N-1], feature]
                         else:
@@ -525,23 +575,24 @@ class AdaBoost():
             else:
                 # Discrete
                 threshold = 0.5
-            # Prediction and compute the error for weak learner
-            e = 0
-            for k in range(N):
-                # prediction
-                if train_data.at[train_data.index[i], feature] <= threshold:
-                    x_pred[i] = 0
-                else:
-                    x_pred[i] = 1
-                # count error
-                if train_data.at[train_data.index[i], 'target'] == x_pred[i]:
-                    e += self.D[i]
+            # Prediction and compute the error for the classifier mode of <= or >
+            tmp_pred1 = self.Classifier(train_data, feature, threshold, 1)    # -1 or 1 => (<=)
+            tmp_e1 = self.CountError(label, tmp_pred1)
+            tmp_pred2 = self.Classifier(train_data, feature, threshold, 2)    # -1 or 1 => (>)
+            tmp_e2 = self.CountError(label, tmp_pred2)
+            if tmp_e1 <= tmp_e2:
+                tmp_e = tmp_e1
+                tmp_pred = tmp_pred1
+            else:
+                tmp_e = tmp_e2
+                tmp_pred = tmp_pred2
+
             # find the weak learner has min error
-            if e < error:
+            if tmp_e < error:
                 best_feature = feature
                 best_threshold = threshold
-                error = e
-                prediction = x_pred     
+                error = tmp_e
+                prediction = tmp_pred
         return best_feature, best_threshold, error, prediction
 
     def Training(self, train_data):
@@ -551,20 +602,19 @@ class AdaBoost():
         self.D = np.full((N), 1/N)
         train_label = train_data['target']  #value = 0 or 1
         y_label = np.ones(N)    # value = -1 or 1
+        for i in range(N):
+            if train_label.loc[i] == 0:
+                y_label[i] = -1
 
         # Untill meet the limited estimator
         for k in range(self.limitEstimator):
             # find classifier h and compute error e
-            feature, self.h_t[k], e, train_pred = self.WeakLearner(train_data)  # value = 0 or 1
+            feature, self.h_t[k], e, y_pred = self.WeakLearner(train_data, y_label)  # value = -1 or 1
             self.h_f.append(feature)
-            y_pred = np.ones(N)    # value = -1 or 1
-            # change values to -1 or 1
-            for i in range(N):
-                if train_pred[i] == 0:
-                    y_pred[i] = -1
-                if train_label.loc[train_label.index[i]] == 0:
-                    y_label[i] = -1
+            print(e)
             # compute weight classifier a = (1/2)*ln((1-e)/e)
+            if e == 0:  # e = 0 -> classifier good but not perfect, give it very small error
+                e = np.argmin(self.D) / 10
             self.a[k] = np.log((1-e)/e) / 2
             # update distribution D = D*exp(-a*y*h(x)) / Z
             self.D = (self.D * np.exp((-self.a[k])*y_label*y_pred))
@@ -575,14 +625,14 @@ class AdaBoost():
         pred = np.zeros((test_num))
         for k in range(test_num):
             for i in range(self.limitEstimator):
-                if test_data.at[test_data.index[k], self.h_f[i]] <= self.h_t[i]:
+                if test_data.at[k, self.h_f[i]] <= self.h_t[i]:
                     h = -1
                 else:
                     h = 1
                 pred[k] += self.a[i] * h
-            if pred[k] == -1:
+            if pred[k] < 0: #negative
                 pred[k] = 0
-            else:
+            else:   #positive
                 pred[k] = 1
         return pred
   
@@ -593,13 +643,13 @@ class AdaBoost():
 
 # In[ ]:
 print("Q 4:")
-clf_10estimator = AdaBoost(n_estimators=10)
+# clf_10estimator = AdaBoost(n_estimators=10)
 clf_100estimator = AdaBoost(n_estimators=100)
-print("N_estimator = 10:")
-clf_10estimator.Training(train_encoding)
-pred_10estimator = clf_10estimator.Prediction(test_encoding)
-Acuracy(y_test, pred_10estimator)
-print("--------------------------------------")
+# print("N_estimator = 10:")
+# clf_10estimator.Training(train_encoding)
+# pred_10estimator = clf_10estimator.Prediction(test_encoding)
+# Acuracy(y_test, pred_10estimator)
+# print("--------------------------------------")
 print("N_estimator = 100:")
 clf_100estimator.Training(train_encoding)
 pred_100estimator = clf_100estimator.Prediction(test_encoding)
@@ -622,8 +672,22 @@ print("--------------------------------------")
 
 class RandomForest():
     def __init__(self, n_estimators, max_features, boostrap=True, criterion='gini', max_depth=None):
+        self.Estimator = n_estimators   # The number of trees in the forest
+        self.Feature_num = max_features # The number of features to consider when looking for the best split
+        self.Boostrap = boostrap    # Whether bootstrap samples are used when building trees
+        self.Criterion = criterion  # The function to measure the quality of a split
+        self.Depth = max_depth  # The maximum depth of the tree
         return None
 
+    def Bagging(self):
+        'Booststrap aggregating'
+
+    def Create(self, train_data):
+        'Creat a random forest.'
+    
+    def Testing(self, test_data):
+        'Use forest to predicte the testing data.\nOutput : the prediction'
+        return pred
 
 # ### Question 5.1
 # Using `criterion=gini`, `max_depth=None`, `max_features=sqrt(n_features)`, showing the accuracy score of test data by `n_estimators=10` and `n_estimators=100`, respectively.
@@ -634,14 +698,16 @@ class RandomForest():
 
 print("Q 5.1:")
 clf_10tree = RandomForest(n_estimators=10, max_features=np.sqrt(feature_num))
-clf_100tree = RandomForest(n_estimators=100, max_features=np.sqrt(feature_num))
-# print("N_estimator = 10:")
-# clf_gini.Create(train_encoding)
-# clf_gini.Testing(test_encoding)
-# print("--------------------------------------")
+# clf_100tree = RandomForest(n_estimators=100, max_features=np.sqrt(feature_num))
+print("N_estimator = 10:")
+clf_10tree.Create(train_encoding)
+pred_10tree = clf_10tree.Testing(test_encoding)
+Acuracy(y_test, pred_10tree)
+print("--------------------------------------")
 # print("N_estimator = 100:")
-# clf_entropy.Create(train_encoding)
-# clf_entropy.Testing(test_encoding)
+# clf_100tree.Create(train_encoding)
+# pred_100tree = clf_100tree.Testing(test_encoding)
+# Acuracy(y_test, pred_100tree)
 # print("--------------------------------------")
 
 # In[ ]:
@@ -658,16 +724,18 @@ clf_100tree = RandomForest(n_estimators=100, max_features=np.sqrt(feature_num))
 
 
 print("Q 5.2:")
-clf_random_features = RandomForest(n_estimators=10, max_features=np.sqrt(feature_num))
+# clf_random_features = RandomForest(n_estimators=10, max_features=np.sqrt(feature_num))
 clf_all_features = RandomForest(n_estimators=10, max_features=feature_num)
 # print("Random features:")
-# clf_gini.Create(train_encoding)
-# clf_gini.Testing(test_encoding)
+# clf_random_features.Create(train_encoding)
+# pred_random_features = clf_random_features.Testing(test_encoding)
+# Acuracy(y_test, pred_random_features)
 # print("--------------------------------------")
-# print("All features:")
-# clf_entropy.Create(train_encoding)
-# clf_entropy.Testing(test_encoding)
-# print("--------------------------------------")
+print("All features:")
+clf_all_features.Create(train_encoding)
+pred_all_features = clf_all_features.Testing(test_encoding)
+Acuracy(y_test, pred_all_features)
+print("--------------------------------------")
 
 # - Note: Use majority votes to get the final prediction, you may get slightly different results when re-building the random forest model
 
