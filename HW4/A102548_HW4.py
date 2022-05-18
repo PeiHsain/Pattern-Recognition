@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 from sklearn.svm import SVC, SVR
 from sklearn.metrics import accuracy_score
 
+C_range = [3, 5, 6, 7, 10]
+gamma_range = [0.0003, 0.0005, 0.001, 0.003, 0.005]
+
 
 def LoadData():
     'Load data from files.\nOutput : train and test data'
@@ -45,11 +48,9 @@ def cross_validation(x_train, y_train, k=5):
             sample1_num -= 1
         else:
             valid_end = validation_size * (i+1)
-        # print(f"start : {valid_start}, end : {valid_end}")
         # split list to get train and validation lists
         validation_list = shuffled_data[valid_start : valid_end]
         train_list = np.delete(shuffled_data, validation_list)
-        # print("Split: %s, Training index: %s, Validation index: %s" % (i+1, train_list, validation_list))
         fold_list.append([train_list, validation_list]) # add one element list
     return fold_list
 
@@ -57,17 +58,18 @@ def cross_validation(x_train, y_train, k=5):
 # ## Question 2
 # Using sklearn.svm.SVC to train a classifier on the provided train set and conduct the grid search of “C”, “kernel” and “gamma” to find the best parameters by cross-validation.
 def GridCross(x_train, y_train, k=5):
-    'Using grid search and cross-validation to find the best hyperparameters.\nOutput : the best parameters [C, gamma]'
+    'Using grid search and cross-validation to find the best hyperparameters.\nOutput : the best parameters [C, gamma], the log of accuracy'
+    N = len(C_range)
+    M = len(gamma_range)
+    acc_log = np.zeros([N, M])
     best_score = 0
-    C_range = [0.001, 0.01, 1, 10]
-    gamma_range = [0.001, 0.01, 0.1, 1]
     kfold = cross_validation(x_train, y_train, k)
     # grid search start   
-    for g in gamma_range:
-        for c in C_range:
+    for c in range(N):
+        for g in range(M):
             # for every possible parameter combination, train the model with cross-validation
             acc = []
-            clf = SVC(C=c, kernel='rbf', gamma=g)
+            clf = SVC(C=C_range[c], kernel='rbf', gamma=gamma_range[g])
             for fold in kfold:
                 x = []
                 y = []
@@ -80,23 +82,39 @@ def GridCross(x_train, y_train, k=5):
                     test_x.append(x_train[j])
                     test_label.append(y_train[j])
                 clf.fit(x, y)   # train a model by fold data
-                acc.append(clf.score(test_x, test_label))   # accuracy of the model
-            avg_score = np.sum(acc) / k
+                y_pred = clf.predict(test_x)
+                acc.append(accuracy_score(y_pred, test_label))   # accuracy of the model
+            acc_log[c][g] = np.sum(acc) / k
             # best performing parameters
-            if avg_score > best_score:
-                best_score = avg_score
-                best_parameters = [c, g]
-    return best_parameters    
+            if acc_log[c][g] > best_score:
+                best_score = acc_log[c][g]
+                best_parameters = [C_range[c], gamma_range[g]]
+    return best_parameters, acc_log
 
 
 # ## Question 3
 # Plot the grid search results of your SVM. The x, y represents the hyperparameters of “gamma” and “C”, respectively. And the color represents the average score of validation folds 
-# TODO
-
-
-# ## Question 4
-# Train your SVM model by the best parameters you found from question 2 on the whole training set and evaluate the performance on the test set.
-# TODO
+def ColorImage(acc):
+    'Plot the grid search results of the SVM.'
+    N = len(C_range)
+    M = len(gamma_range)
+    fig, ax = plt.subplots()
+    # Plot the heatmap
+    im = ax.imshow(acc)    
+    ax.set_title(f"Hyperparameter Gridsearch")
+    ax.set_xlabel(f"Gamma Parameter")
+    ax.set_ylabel(f"C Parameter")
+    # Show all ticks and label them with the respective list entries.
+    ax.set_xticks(np.arange(M), labels=gamma_range)
+    ax.set_yticks(np.arange(N), labels=C_range)
+    # Loop over the data and create a `Text` for each "pixel".
+    # Change the text's color depending on the data.
+    for i in range(N):  # row
+        for j in range(M):  #col
+            text = ax.text(j, i, np.round(acc[i, j], 2), ha="center", va="center")
+    # Create colorbar
+    cbar = ax.figure.colorbar(im, ax=ax)
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -115,12 +133,14 @@ if __name__ == "__main__":
     assert kfold_data[0][1].shape[0] == 55 # The number of data in each validation fold should equal to training data divieded by K
 
     # Question 2
-    best_parameters = GridCross(x_train, y_train, k=5)
+    best_parameters, accuracy_log = GridCross(x_train, y_train, k=10)
     print(f"The best parameters: C = {best_parameters[0]}, gamma = {best_parameters[1]}")
 
     # # Question 3
-    # # TODO
+    ColorImage(accuracy_log)
 
-    # # Question 4
-    # y_pred = best_model.predict(x_test)
-    # print("Accuracy score: ", accuracy_score(y_pred, y_test))   
+    # Question 4
+    best_model = SVC(C=best_parameters[0], kernel='rbf', gamma=best_parameters[1])
+    best_model.fit(x_train, y_train)
+    y_pred = best_model.predict(x_test)
+    print("Accuracy score: ", accuracy_score(y_pred, y_test))   
