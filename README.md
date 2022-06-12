@@ -10,3 +10,6 @@ Implement the Decision Tree, AdaBoost and Random Forest algorithm by using only 
 
 # HW4
 Implement the cross-validation and grid search using only NumPy, then train the SVM model from scikit-learn on the provided dataset and test the performance with testing data.
+
+# HW5
+Implement the deep neural network by any deep learning framework, then train the DNN model by the Cifar-10 dataset.
